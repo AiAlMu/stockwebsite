@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forefront — AI-Powered Lead Generation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ["'Instrument Serif'", "serif"],
+            body: ["'Barlow'", "sans-serif"],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #000; color: #fff; }
+    #root { overflow-x: clip; }
+
+    .liquid-glass {
+      background: rgba(255,255,255,0.01);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0) 40%,  rgba(255,255,255,0) 60%,
+        rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .liquid-glass-strong {
+      background: rgba(255,255,255,0.01);
+      backdrop-filter: blur(50px);
+      -webkit-backdrop-filter: blur(50px);
+      box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass-strong::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.5) 0%,  rgba(255,255,255,0.2) 20%,
+        rgba(255,255,255,0) 40%,   rgba(255,255,255,0) 60%,
+        rgba(255,255,255,0.2) 80%, rgba(255,255,255,0.5) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* BlurText word animation */
+    .blur-word {
+      display: inline-block;
+      opacity: 0;
+      filter: blur(12px);
+      transform: translateY(36px);
+      transition: opacity 0.65s ease, filter 0.65s ease, transform 0.65s ease;
+    }
+    .blur-word.in {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0);
+    }
+
+    /* Hero fade-in animations */
+    @keyframes heroFade {
+      from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+      to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+    }
+    .hero-1 { animation: heroFade 0.6s ease forwards; animation-delay: 0.15s; opacity: 0; }
+    .hero-2 { animation: heroFade 0.6s ease forwards; animation-delay: 0.85s; opacity: 0; }
+    .hero-3 { animation: heroFade 0.6s ease forwards; animation-delay: 1.15s; opacity: 0; }
+    .hero-4 { animation: heroFade 0.8s ease forwards; animation-delay: 1.45s; opacity: 0; }
+
+    button { cursor: pointer; border: none; background: none; }
+    a { text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* ─── Icons ─── */
+    const IconArrowUpRight = ({size=16}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 17L17 7"/><path d="M17 7H7"/><path d="M17 7v10"/>
+      </svg>
+    );
+    const IconPlay = ({size=16}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+    );
+    const IconZap = ({size=18}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+    );
+    const IconPalette = ({size=18}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+        <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+        <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+        <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+      </svg>
+    );
+    const IconBarChart = ({size=18}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+      </svg>
+    );
+    const IconShield = ({size=18}) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    );
+
+    /* ─── Infinite Marquee (flat, seamless CSS loop) ─── */
+    function PerspectiveMarquee({ items = [], fontSize = 52, duration = 30 }) {
+      const uid = React.useId().replace(/:/g, '');
+      const kfName = `mq_${uid}`;
+      return (
+        <>
+          <style>{`
+            @keyframes ${kfName} {
+              from { transform: translateX(0); }
+              to   { transform: translateX(-50%); }
+            }
+            .mq-track-${uid} {
+              display: flex;
+              white-space: nowrap;
+              animation: ${kfName} ${duration}s linear infinite;
+              will-change: transform;
+            }
+          `}</style>
+          <div style={{ overflow: 'hidden', width: '100%' }}>
+            <div className={`mq-track-${uid}`}>
+              {[0, 1].map(copy => (
+                <span key={copy} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  {items.map((item, i) => (
+                    <React.Fragment key={i}>
+                      <span style={{
+                        fontFamily: "'Instrument Serif', serif",
+                        fontStyle: 'italic',
+                        fontSize,
+                        color: 'rgba(255,255,255,0.75)',
+                        letterSpacing: '-0.02em',
+                        lineHeight: 1.1,
+                        padding: '0 32px',
+                      }}>{item}</span>
+                      <span style={{
+                        color: 'rgba(255,255,255,0.25)',
+                        fontSize: fontSize * 0.5,
+                        lineHeight: 1,
+                      }}>●</span>
+                    </React.Fragment>
+                  ))}
+                </span>
+              ))}
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    /* ─── HLS Video ─── */
+    function HLSVideo({ src, className, style }) {
+      const ref = useRef(null);
+      useEffect(() => {
+        const v = ref.current;
+        if (!v) return;
+        let hls;
+        if (window.Hls && window.Hls.isSupported()) {
+          hls = new window.Hls();
+          hls.loadSource(src);
+          hls.attachMedia(v);
+          hls.on(window.Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
+        } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+          v.src = src;
+          v.play().catch(() => {});
+        }
+        return () => { if (hls) hls.destroy(); };
+      }, [src]);
+      return <video ref={ref} autoPlay loop muted playsInline className={className} style={style} />;
+    }
+
+    /* ─── BlurText ─── */
+    function BlurText({ text, className, delay = 100 }) {
+      const ref       = useRef(null);
+      const [vis, setVis] = useState(false);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([e]) => {
+          if (e.isIntersecting) { setVis(true); obs.disconnect(); }
+        }, { threshold: 0.1 });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, []);
+      const words = text.split(' ');
+      return (
+        <div ref={ref} className={className} style={{ display:'flex', flexWrap:'wrap', gap:'0.3em' }}>
+          {words.map((w, i) => (
+            <span key={i}
+              className={`blur-word${vis ? ' in' : ''}`}
+              style={{ transitionDelay: `${i * delay}ms` }}>
+              {w}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    /* ─── Shared ─── */
+    const Badge = ({ children }) => (
+      <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body inline-block">
+        {children}
+      </span>
+    );
+    const GradTop = () => (
+      <div className="absolute top-0 left-0 right-0 pointer-events-none z-10"
+           style={{ height:200, background:'linear-gradient(to bottom, black, transparent)' }} />
+    );
+    const GradBottom = () => (
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
+           style={{ height:200, background:'linear-gradient(to top, black, transparent)' }} />
+    );
+    const GlassBtn = ({ children, className = '' }) => (
+      <button className={`liquid-glass-strong rounded-full px-5 py-2.5 text-white font-body font-medium text-sm flex items-center gap-2 ${className}`}>
+        {children}
+      </button>
+    );
+
+    /* ═══════════════ NAVBAR ═══════════════ */
+    function Navbar() {
+      return (
+        <nav className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-8 lg:px-16 py-3">
+          <div className="font-heading italic text-white text-2xl select-none" style={{ letterSpacing:'-0.03em' }}>Forefront</div>
+          <div className="hidden md:flex items-center liquid-glass rounded-full px-1.5 py-1 gap-0.5">
+            {['Home','Services','Work','Process'].map(item => (
+              <a key={item} href="#"
+                 className="px-3 py-2 text-sm font-medium text-white/90 font-body hover:text-white transition-colors rounded-full">
+                {item}
+              </a>
+            ))}
+            <a href="#" className="bg-white text-black rounded-full px-3.5 py-1.5 text-sm font-medium font-body
+                                   flex items-center gap-1.5 hover:bg-white/90 transition-colors ml-1">
+              Get Started <IconArrowUpRight size={14} />
+            </a>
+          </div>
+          <div className="md:hidden liquid-glass-strong rounded-full px-4 py-2">
+            <span className="text-white text-sm font-body">Menu</span>
+          </div>
+        </nav>
+      );
+    }
+
+    /* ═══════════════ HERO ═══════════════ */
+    function Hero() {
+      return (
+        <section className="relative" style={{ height:1000, overflow:'hidden' }}>
+          <video autoPlay loop muted playsInline
+                 poster="/images/hero_bg.jpeg"
+                 className="absolute left-0 w-full h-full object-cover z-0"
+                 style={{ top:0 }}>
+            <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/20 z-0" />
+          <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-0"
+               style={{ height:300, background:'linear-gradient(to bottom, transparent, black)' }} />
+
+          <div className="relative z-10 flex flex-col items-center text-center px-6" style={{ paddingTop:160 }}>
+            {/* Badge */}
+            <div className="hero-1 flex items-center liquid-glass rounded-full px-1 py-1 gap-2 mb-8">
+              <span className="bg-white text-black rounded-full px-3 py-1 text-xs font-semibold font-body">New</span>
+              <span className="text-white/80 text-sm font-body pr-3">Introducing AI-powered lead generation.</span>
+            </div>
+
+            {/* Heading */}
+            <BlurText
+              text="More Leads. Less Guesswork."
+              className="text-6xl md:text-7xl lg:text-[5.5rem] font-heading italic text-white leading-[0.88]
+                         max-w-3xl tracking-[-2px] justify-center mb-6"
+              delay={100}
+            />
+
+            {/* Sub */}
+            <p className="hero-2 text-sm md:text-base text-white/80 font-body font-light leading-snug max-w-sm mb-8">
+              Precision targeting. Relentless optimization. Campaigns built on data, run by experts. This is marketing, ruthlessly reimagined.
+            </p>
+
+            {/* CTAs */}
+            <div className="hero-3 flex items-center gap-5">
+              <button className="liquid-glass-strong rounded-full px-5 py-2.5 text-white font-body font-medium text-sm flex items-center gap-2">
+                Get Started <IconArrowUpRight size={15} />
+              </button>
+              <button className="text-white/70 font-body font-light text-sm flex items-center gap-2 hover:text-white transition-colors">
+                <IconPlay size={13} /> Watch the Film
+              </button>
+            </div>
+
+            {/* Partners marquee */}
+            <div className="hero-4 flex flex-col items-center gap-5 mt-14 w-full">
+              <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white/50 font-body">
+                Trusted by growth teams at
+              </span>
+              <div style={{ width:'100vw', marginLeft:'calc(-50vw + 50%)' }}>
+                <PerspectiveMarquee
+                  items={['Shopify','HubSpot','Salesforce','Intercom','Klaviyo']}
+                  fontSize={52}
+                  duration={30}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    /* ═══════════════ START SECTION ═══════════════ */
+    function StartSection() {
+      return (
+        <section className="relative" style={{ minHeight:700 }}>
+          <HLSVideo
+            src="https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8"
+            className="absolute inset-0 w-full h-full object-cover" />
+          <GradTop /><GradBottom />
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-44" style={{ minHeight:700 }}>
+            <Badge>How It Works</Badge>
+            <BlurText
+              text="Brief us. We fill your pipeline."
+              className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight
+                         leading-[0.88] max-w-xl mt-4 mb-5 justify-center"
+              delay={110}
+            />
+            <p className="text-white/60 font-body font-light text-sm md:text-base max-w-sm mb-8 leading-relaxed">
+              Tell us your audience and goals. Our AI maps the funnel, launches campaigns, and delivers qualified leads—while you focus on closing.
+            </p>
+            <button className="liquid-glass-strong rounded-full px-6 py-3 text-white font-body font-medium text-sm flex items-center gap-2">
+              Get Started <IconArrowUpRight size={15} />
+            </button>
+          </div>
+        </section>
+      );
+    }
+
+    /* ═══════════════ FEATURES SCROLL (horizontal hijack) ═══════════════ */
+    const SCROLL_ROWS = [
+      {
+        num: "01",
+        title: "Campaigns that attract. Funnels that convert.",
+        body: "Every campaign is intentional. Our AI studies high-performing funnels across your industry—then builds yours to out-convert the competition.",
+        cta: "See the playbook",
+        gif: "https://motionsites.ai/assets/hero-finlytic-preview-CV9g0FHP.gif",
+      },
+      {
+        num: "02",
+        title: "It optimizes itself. Automatically.",
+        body: "Your campaigns evolve on their own. AI tracks every click, open, and conversion—then reallocates budget in real time. No manual tweaking. Ever.",
+        cta: "See how it works",
+        gif: "https://motionsites.ai/assets/hero-wealth-preview-B70idl_u.gif",
+      },
+      {
+        num: "03",
+        title: "Every channel. One command centre.",
+        body: "Paid search, social, email, retargeting—all orchestrated from a single dashboard. No tab-switching, no agency silos. Just unified pipeline momentum.",
+        cta: "Explore the platform",
+        gif: "https://motionsites.ai/assets/hero-finlytic-preview-CV9g0FHP.gif",
+      },
+    ];
+
+    function FeaturesChess() {
+      const outerRef = useRef(null);
+      const [progress, setProgress] = useState(0); // 0 → 1 across whole section
+
+      useEffect(() => {
+        const onScroll = () => {
+          const el = outerRef.current;
+          if (!el) return;
+          const { top, height } = el.getBoundingClientRect();
+          const vh = window.innerHeight;
+          // travel = how many px we scroll while sticky (total height - 1 viewport)
+          const travel = height - vh;
+          const scrolled = Math.max(0, Math.min(travel, -top));
+          setProgress(travel > 0 ? scrolled / travel : 0);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        return () => window.removeEventListener('scroll', onScroll);
+      }, []);
+
+      // translateX: 0% at start → -(n-1)*100vw at end
+      const panels = SCROLL_ROWS.length;
+      const translateX = -progress * (panels - 1) * 100; // in vw
+
+      // active index for dots
+      const rawIdx = progress * (panels - 1);
+      const activeIdx = Math.round(rawIdx);
+
+      return (
+        <section ref={outerRef} style={{ height: `${100 * (panels + 0.8)}vh`, position:'relative' }}>
+          <style>{`
+            @keyframes panelFadeIn {
+              from { opacity:0; transform:translateY(16px); }
+              to   { opacity:1; transform:translateY(0); }
+            }
+          `}</style>
+
+          {/* Sticky wrapper */}
+          <div style={{ position:'sticky', top:0, height:'100vh', overflow:'hidden', display:'flex', flexDirection:'column' }}>
+
+            {/* Section header */}
+            <div style={{ flexShrink:0, textAlign:'center', padding:'5rem 2rem 2rem' }}>
+              <Badge>Capabilities</Badge>
+              <BlurText
+                text="Smart marketing. Measurable results."
+                className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight leading-[0.88] mt-4 justify-center"
+                delay={90}
+              />
+            </div>
+
+            {/* Progress dots */}
+            <div style={{ display:'flex', justifyContent:'center', gap:8, marginBottom:24 }}>
+              {SCROLL_ROWS.map((_, i) => (
+                <div key={i} style={{
+                  height:5, borderRadius:99,
+                  width: i === activeIdx ? 28 : 5,
+                  background: i === activeIdx ? '#fff' : 'rgba(255,255,255,0.2)',
+                  transition:'all 0.35s ease',
+                }} />
+              ))}
+            </div>
+
+            {/* Horizontal sliding track */}
+            <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
+              <div style={{
+                display:'flex',
+                width: `${panels * 100}vw`,
+                height:'100%',
+                transform: `translateX(${translateX}vw)`,
+                transition:'transform 0.05s linear',
+                willChange:'transform',
+              }}>
+                {SCROLL_ROWS.map((row, i) => (
+                  <div key={i} style={{
+                    width:'100vw', height:'100%', flexShrink:0,
+                    display:'flex', alignItems:'center',
+                    padding:'0 6vw', gap:'4rem',
+                    maxWidth:'none',
+                  }}>
+                    {/* Text */}
+                    <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:'1rem' }}>
+                      <span style={{ fontFamily:"'Barlow',sans-serif", color:'rgba(255,255,255,0.3)', fontSize:11, fontWeight:500, letterSpacing:'0.18em' }}>
+                        {row.num}
+                      </span>
+                      <h3 style={{ fontFamily:"'Instrument Serif',serif", fontStyle:'italic', color:'#fff', fontSize:'clamp(1.8rem,3vw,2.75rem)', lineHeight:1.1, margin:0 }}>
+                        {row.title}
+                      </h3>
+                      <p style={{ fontFamily:"'Barlow',sans-serif", color:'rgba(255,255,255,0.6)', fontSize:15, fontWeight:300, lineHeight:1.7, margin:0, maxWidth:440 }}>
+                        {row.body}
+                      </p>
+                      <button className="liquid-glass-strong rounded-full" style={{ padding:'10px 22px', color:'#fff', fontFamily:"'Barlow',sans-serif", fontWeight:500, fontSize:14, display:'inline-flex', alignItems:'center', gap:8, alignSelf:'flex-start', marginTop:8 }}>
+                        {row.cta} <IconArrowUpRight size={14} />
+                      </button>
+                    </div>
+                    {/* Image */}
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div className="liquid-glass rounded-2xl overflow-hidden" style={{ aspectRatio:'16/10' }}>
+                        <img src={row.gif} alt={row.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scroll hint */}
+            <div style={{ display:'flex', justifyContent:'center', alignItems:'center', gap:6, padding:'12px 0 20px', opacity: progress >= 0.98 ? 0 : 0.4, transition:'opacity 0.4s' }}>
+              <div style={{ width:1, height:28, background:'linear-gradient(to bottom,white,transparent)' }} />
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+
+    /* ═══════════════ FEATURES GRID ═══════════════ */
+    function FeaturesGrid() {
+      const features = [
+        { icon: <IconZap />,      title:"Leads in Days",         body:"From brief to live campaigns in under a week. Qualified leads flowing before your competitors have briefed their agency." },
+        { icon: <IconPalette />,  title:"Full-Funnel Strategy",  body:"Awareness, consideration, conversion—every stage mapped, built, and optimised for maximum pipeline velocity." },
+        { icon: <IconBarChart />, title:"Revenue Attribution",   body:"Know exactly which channel, ad, and message drove each closed deal. No vanity metrics, ever." },
+        { icon: <IconShield />,   title:"Brand-Safe by Default", body:"Campaigns run within verified, brand-safe placements. Compliance, consent, and data privacy handled end-to-end." },
+      ];
+      return (
+        <section className="pb-24 px-8 lg:px-24 max-w-7xl mx-auto">
+          <div className="flex flex-col items-center text-center mb-12">
+            <Badge>Why Us</Badge>
+            <BlurText
+              text="The edge that compounds."
+              className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight
+                         leading-[0.88] mt-4 justify-center"
+              delay={90}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f, i) => (
+              <div key={i} className="liquid-glass rounded-2xl p-6 flex flex-col gap-4">
+                <div className="liquid-glass-strong rounded-full w-10 h-10 flex items-center justify-center text-white flex-shrink-0">
+                  {f.icon}
+                </div>
+                <h4 className="text-white font-body font-semibold text-base">{f.title}</h4>
+                <p className="text-white/60 font-body font-light text-sm leading-relaxed">{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    /* ═══════════════ STATS ═══════════════ */
+    function Stats() {
+      const items = [
+        { value:"12k+",  label:"Leads generated monthly" },
+        { value:"4.1×",  label:"Average ROAS" },
+        { value:"62%",   label:"Lower cost per lead" },
+        { value:"8 days",label:"Average time to first lead" },
+      ];
+      return (
+        <section className="relative" style={{ minHeight:560 }}>
+          <HLSVideo
+            src="https://stream.mux.com/NcU3HlHeF7CUL86azTTzpy3Tlb00d6iF3BmCdFslMJYM.m3u8"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter:'saturate(0)' }} />
+          <GradTop /><GradBottom />
+          <div className="relative z-10 flex items-center justify-center px-8 lg:px-16 py-36">
+            <div className="liquid-glass rounded-3xl p-12 md:p-16 w-full max-w-5xl">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-10 text-center">
+                {items.map((s,i) => (
+                  <div key={i} className="flex flex-col gap-2">
+                    <span className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white">{s.value}</span>
+                    <span className="text-white/60 font-body font-light text-sm">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    /* ═══════════════ TESTIMONIALS ═══════════════ */
+    function Testimonials() {
+      const cards = [
+        { quote:"Pipeline tripled in six weeks. We'd never seen CPL drop that fast. Forefront just operates at a different level.", name:"Sarah Chen", role:"VP Marketing, Luminary" },
+        { quote:"We hit our quarterly lead target in 31 days. The attribution clarity alone was worth the engagement.", name:"Marcus Webb", role:"Head of Growth, Arcline" },
+        { quote:"They didn't just run our ads. They rebuilt how we think about demand generation entirely.", name:"Elena Voss", role:"CMO, Helix" },
+      ];
+      return (
+        <section className="py-24 px-8 lg:px-24 max-w-7xl mx-auto">
+          <div className="flex flex-col items-center text-center mb-12">
+            <Badge>What They Say</Badge>
+            <BlurText
+              text="Numbers don't lie."
+              className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight
+                         leading-[0.88] mt-4 justify-center"
+              delay={90}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {cards.map((c,i) => (
+              <div key={i} className="liquid-glass rounded-2xl p-8 flex flex-col gap-6">
+                <p className="text-white/80 font-body font-light text-sm italic leading-relaxed flex-1">
+                  "{c.quote}"
+                </p>
+                <div>
+                  <p className="text-white font-body font-medium text-sm">{c.name}</p>
+                  <p className="text-white/50 font-body font-light text-xs mt-0.5">{c.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    /* ═══════════════ CTA + FOOTER ═══════════════ */
+    function CtaFooter() {
+      return (
+        <section className="relative" style={{ minHeight:760 }}>
+          <HLSVideo
+            src="https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8"
+            className="absolute inset-0 w-full h-full object-cover" />
+          <GradTop /><GradBottom />
+          <div className="relative z-10 flex flex-col items-center justify-center text-center px-8 lg:px-16 py-48">
+            <BlurText
+              text="Your pipeline starts here."
+              className="text-5xl md:text-6xl lg:text-7xl font-heading italic text-white leading-[0.85]
+                         max-w-2xl mb-6 justify-center"
+              delay={80}
+            />
+            <p className="text-white/60 font-body font-light text-sm md:text-base max-w-sm mb-10 leading-relaxed">
+              Book a free growth audit. See exactly where your funnel is leaking—and how fast we can fix it. No commitment. Just clarity.
+            </p>
+            <div className="flex items-center gap-4 flex-wrap justify-center">
+              <button className="liquid-glass-strong rounded-full px-6 py-3 text-white font-body font-medium text-sm flex items-center gap-2">
+                Get My Free Audit <IconArrowUpRight size={16} />
+              </button>
+              <button className="bg-white text-black rounded-full px-6 py-3 font-body font-medium text-sm hover:bg-white/90 transition-colors">
+                View Pricing
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-32 pt-8 w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-4"
+                 style={{ borderTop:'1px solid rgba(255,255,255,0.1)' }}>
+              <span className="text-white/40 text-xs font-body">© 2026 Forefront. All rights reserved.</span>
+              <div className="flex items-center gap-6">
+                {['Privacy','Terms','Contact'].map(l => (
+                  <a key={l} href="#" className="text-white/40 text-xs font-body hover:text-white/60 transition-colors">{l}</a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    /* ═══════════════ APP ═══════════════ */
+    function App() {
+      return (
+        <div className="bg-black min-h-screen">
+          <Navbar />
+          <Hero />
+          <div className="bg-black">
+            <StartSection />
+            <FeaturesChess />
+            <FeaturesGrid />
+            <Stats />
+            <Testimonials />
+            <CtaFooter />
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
